@@ -6,7 +6,7 @@ st.set_page_config(
 <<<<<<< HEAD
     page_title="Insulink",
 =======
-    page_title="Kiosco App - Login",
+    page_title="Insulink - Login",
 >>>>>>> bbc9acd6f93c477680f1f478eb1efcedbfdfba80
     page_icon="💉",
     layout="centered" # "wide" or "centered"
@@ -16,7 +16,7 @@ st.set_page_config(
 <<<<<<< HEAD
 st.title("Parra entretainments")
 =======
-st.title("insulink")
+st.title("Insulink")
 >>>>>>> bbc9acd6f93c477680f1f478eb1efcedbfdfba80
 
 
