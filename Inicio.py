@@ -3,21 +3,15 @@ import streamlit as st
 
 # --- Page Configuration (Optional but Recommended) ---
 st.set_page_config(
-<<<<<<< HEAD
     page_title="Insulink",
-=======
     page_title="Insulink - Login",
->>>>>>> bbc9acd6f93c477680f1f478eb1efcedbfdfba80
     page_icon="💉",
     layout="centered" # "wide" or "centered"
 )
 
 # --- Main Application ---
-<<<<<<< HEAD
 st.title("Parra entretainments")
-=======
-st.title("Insulink")
->>>>>>> bbc9acd6f93c477680f1f478eb1efcedbfdfba80
+st.title("INSULINK")
 
 
 # Check if the user is already logged in (using session state)
