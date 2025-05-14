@@ -10,7 +10,7 @@ st.set_page_config(
 
 # --- Main Application ---
 st.title("Insulink")
-st.title("Médico")
+st.title("Paciente")
 
 ##############################################################
 
