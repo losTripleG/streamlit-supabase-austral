@@ -23,18 +23,18 @@ st.markdown("""
 if not st.session_state.get("signed_in", False):
     # If not signed in, show the sign in form
     with st.form("signin_form"):
-        username = st.text_input("Username (any value)")
-        password = st.text_input("Password (any value)", type="password")
-        submitted = st.form_submit_button("Sign in")
+        username = st.text_input("Nombre de usuario")
+        password = st.text_input("Contraseña", type="password")
+        submitted = st.form_submit_button("Registrarse")
 
         if submitted:
             # For this demo, any username/password is accepted
             if username and password:
                 st.session_state["signed_in"] = True
                 st.session_state["username"] = username # Optional: store username
-                st.success("Sign in successful!")
+                st.success("Usuario registrado correctamente! 😃")
             else:
-                st.error("Please enter both username and password.")
+                st.error("Por favor, ingrese nombre de usuario y contraseña. 😠")
 else:
     # If signed in, show a welcome message
     st.success(f"Welcome, {st.session_state.get('username', 'User')}!")
@@ -56,18 +56,18 @@ st.markdown("""
 if not st.session_state.get("logged_in", False):
     # If not logged in, show the login form
     with st.form("login_form"):
-        username = st.text_input("Username (any value)")
-        password = st.text_input("Password (any value)", type="password")
-        submitted = st.form_submit_button("Login")
+        username = st.text_input("Nombre de usuario")
+        password = st.text_input("Contraseña", type="password")
+        submitted = st.form_submit_button("Iniciar sesión")
 
         if submitted:
             # For this demo, any username/password is accepted
             if username and password:
                 st.session_state["logged_in"] = True
                 st.session_state["username"] = username # Optional: store username
-                st.success("Login successful!")
+                st.success("Inicio exitoso! 👍")
             else:
-                st.error("Please enter both username and password.")
+                st.error("Por favor, ingrese nombre de usuario y contraseña. 😠")
 else:
     # If logged in, show a welcome message
     st.success(f"Welcome back, {st.session_state.get('username', 'User')}!")
