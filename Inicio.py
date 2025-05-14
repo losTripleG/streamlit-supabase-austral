@@ -10,7 +10,7 @@ st.set_page_config(
 
 # --- Main Application ---
 st.title("Parra entretainments")
-st.title("INSULINK")
+st.title("Insulink")
 
 
 # Check if the user is already logged in (using session state)
