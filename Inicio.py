@@ -9,7 +9,7 @@ st.set_page_config(
 )
 
 # --- Main Application ---
-st.title("gona la mas trola")
+st.title("hola")
 
 
 # Check if the user is already logged in (using session state)
