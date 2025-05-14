@@ -15,7 +15,7 @@ st.title("Insulink")
 ##############################################################33
 
 st.markdown("""
-    <h3 style='text-align: center; font-size: 24px;'>¿Deseas registrarte?</h3>
+    <h3 style='text-align: wide; font-size: 24px;'>¿Deseas registrarte?</h3>
 """, unsafe_allow_html=True)
 
 
@@ -25,7 +25,7 @@ if not st.session_state.get("signed_in", False):
     with st.form("signin_form"):
         username = st.text_input("Username (any value)")
         password = st.text_input("Password (any value)", type="password")
-        submitted = st.form_submit_button("Signin")
+        submitted = st.form_submit_button("Sign in")
 
         if submitted:
             # For this demo, any username/password is accepted
@@ -50,7 +50,7 @@ else:
 ##################################################################
 
 st.markdown("""
-    <h3 style='text-align: center; font-size: 24px;'>¿Deseas iniciar sesión?</h3>
+    <h3 style='text-align: wide; font-size: 24px;'>¿Deseas iniciar sesión?</h3>
 """, unsafe_allow_html=True)
 # Check if the user is already logged in (using session state)
 if not st.session_state.get("logged_in", False):
