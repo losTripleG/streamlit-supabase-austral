@@ -95,12 +95,22 @@ def execute_query(query, conn=None, is_select=True):
             conn.rollback()
         return pd.DataFrame() if is_select else False
 
-def add_employee(nombre, dni, telefono, fecha_contratacion, salario):
+def add_paciente(nombre_apellido, id_paciente, tipo_diabetes, sexo, dispositivo, altura, fecha_nacimiento, act_fisica):
     """
     Adds a new employee to the Empleado table.
     """
 
-    query = "INSERT INTO empleado (nombre, dni, telefono, fecha_contratacion, salario) VALUES (%s, %s, %s, %s, %s)"
-    params = (nombre, dni, telefono, fecha_contratacion, salario)
+    query = "INSERT INTO empleado (nombre_apellido, id_paciente, tipo_diabetes, sexo, dispositivo, altura, fecha_nacimiento, act_fisica) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+    params = (nombre_apellido, id_paciente, tipo_diabetes, sexo, dispositivo, altura, fecha_nacimiento, act_fisica)
+    
+    return execute_query(query, params=params, is_select=False)
+
+def add_medico(id_medico, nombre_apellido, hospital):
+    """
+    Adds a new employee to the Empleado table.
+    """
+
+    query = "INSERT INTO empleado (id_medico, nombre_apellido, hospital) VALUES (%s, %s, %s)"
+    params = (id_medico, nombre_apellido, hospital)
     
     return execute_query(query, params=params, is_select=False)
