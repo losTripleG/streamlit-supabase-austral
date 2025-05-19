@@ -40,18 +40,19 @@ def connect_to_supabase():
         return None
 
 
-def execute_query(query, conn=None, is_select=True):
+def execute_query(query, params=None, conn=None, is_select=True):
     """
-    Executes a SQL query and returns the results as a pandas DataFrame for SELECT queries,
+    Executes a SQL query with optional parameters. Returns a pandas DataFrame for SELECT queries,
     or executes DML operations (INSERT, UPDATE, DELETE) and returns success status.
-    
+
     Args:
         query (str): The SQL query to execute
+        params (tuple or list, optional): Parameters to pass to the query safely
         conn (psycopg2.extensions.connection, optional): Database connection object.
             If None, a new connection will be established.
         is_select (bool, optional): Whether the query is a SELECT query (True) or 
             a DML operation like INSERT/UPDATE/DELETE (False). Default is True.
-            
+
     Returns:
         pandas.DataFrame or bool: A DataFrame containing the query results for SELECT queries,
             or True for successful DML operations, False otherwise.
@@ -62,32 +63,36 @@ def execute_query(query, conn=None, is_select=True):
         if conn is None:
             conn = connect_to_supabase()
             close_conn = True
-        
+
         # Create cursor and execute query
         cursor = conn.cursor()
-        cursor.execute(query)
-        
+
+        if params:
+            cursor.execute(query, params)
+        else:
+            cursor.execute(query)
+
         if is_select:
             # Fetch all results for SELECT queries
             results = cursor.fetchall()
-            
+
             # Get column names from cursor description
             colnames = [desc[0] for desc in cursor.description]
-            
+
             # Create DataFrame
-            df = pd.DataFrame(results, columns=colnames)
-            result = df
+            result = pd.DataFrame(results, columns=colnames)
         else:
             # For DML operations, commit changes and return success
             conn.commit()
             result = True
-        
+
         # Close cursor and connection if we created it
         cursor.close()
         if close_conn:
             conn.close()
-            
+
         return result
+
     except Exception as e:
         print(f"Error executing query: {e}")
         # Rollback any changes if an error occurred during DML operation
@@ -95,12 +100,13 @@ def execute_query(query, conn=None, is_select=True):
             conn.rollback()
         return pd.DataFrame() if is_select else False
 
+
 def add_paciente(nombre_apellido, id_paciente, tipo_diabetes, sexo, dispositivo, altura, fecha_nacimiento, act_fisica):
     """
     Adds a new employee to the Empleado table.
     """
 
-    query = "INSERT INTO empleado (nombre_apellido, id_paciente, tipo_diabetes, sexo, dispositivo, altura, fecha_nacimiento, act_fisica) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+    query = """INSERT INTO "Pacientes" (nombre_apellido, id_paciente, tipo_diabetes, sexo, dispositivo, altura, fecha_nacimiento, act_fisica) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
     params = (nombre_apellido, id_paciente, tipo_diabetes, sexo, dispositivo, altura, fecha_nacimiento, act_fisica)
     
     return execute_query(query, params=params, is_select=False)
@@ -110,7 +116,12 @@ def add_medico(id_medico, nombre_apellido, hospital):
     Adds a new employee to the Empleado table.
     """
 
-    query = "INSERT INTO empleado (id_medico, nombre_apellido, hospital) VALUES (%s, %s, %s)"
+    query = "INSERT INTO Médico (id_medico, nombre_apellido, hospital) VALUES (%s, %s, %s)"
     params = (id_medico, nombre_apellido, hospital)
     
     return execute_query(query, params=params, is_select=False)
+print(os.getenv("SUPABASE_DB_HOST"))
+print(os.getenv("SUPABASE_DB_PORT"))
+print(os.getenv("SUPABASE_DB_NAME"))
+print(os.getenv("SUPABASE_DB_USER"))
+print(os.getenv("SUPABASE_DB_PASSWORD"))
