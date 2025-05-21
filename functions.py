@@ -142,48 +142,50 @@ def add_medico(id_medico, nombre_apellido, hospital):
     """
     Adds a new employee to the Empleado table.
     """
+    # Normalización de entradas
+    nombre_apellido = nombre_apellido.strip().title()  # Capitaliza nombre
+    id_medico = id_medico.strip()  # Elimina espacios accidentales
 
     query = """INSERT INTO "Médico" (id_medico, nombre_apellido, hospital) VALUES (%s, %s, %s)"""
     params = (id_medico, nombre_apellido, hospital)
     
-    return execute_query(query, params=params, is_select=False)
+    try:
+        execute_query(query, params=params, is_select=False)
+        return True
+    except Exception as e:
+        print(f"Error en add_medico: {e}")
+        return False
+
+import psycopg2
 
 def verify_medico(nombre_apellido, id_medico):
-    """
-    Verifica si un médico existe en la base de datos con las credenciales proporcionadas.
-
-    Args:
-        nombre_apellido (str): Nombre y apellido del médico.
-        id_medico (str): DNI del médico.
-        hospital (str): Hospital al que pertenece el médico.
-
-    Returns:
-        bool: True si las credenciales coinciden con un médico existente, False en caso contrario.
-    """
     try:
-        # Conecta a tu base de datos. ¡Asegúrate que 'database.db' sea el nombre correcto!
-        conn = sqlite3.connect('database.db')
+        # Conexión a Supabase PostgreSQL
+        conn = psycopg2.connect(
+            host="aws-0-us-east-1.pooler.supabase.com",
+            port=5432,
+            database="postgres",
+            user="postgres.nuauokteicgejvyestli",
+            password="Kr7SGT_er?WQHkf"
+        )
         cursor = conn.cursor()
 
-        # Ejecuta una consulta para buscar un médico que coincida con TODOS los parámetros
-        cursor.execute(
-            """SELECT * FROM "Médicos" WHERE nombre_apellido = ? AND id_medico = ?""",
-            (nombre_apellido, id_medico)
-        )
+        # Consulta SQL con comillas por el nombre de tabla con tilde y mayúscula
+        cursor.execute("""
+            SELECT * FROM "Médico" 
+            WHERE nombre_apellido = %s AND id_medico = %s
+        """, (nombre_apellido, id_medico))
 
-        # Obtiene el primer resultado que coincida. Si no hay, fetchone() devuelve None.
-        medico_encontrado = cursor.fetchone()
+        resultado = cursor.fetchone()
+        cursor.close()
+        conn.close()
 
-        conn.close() # Siempre cierra la conexión a la base de datos
+        return resultado is not None
 
-        if medico_encontrado:
-            return True  # El médico fue encontrado con las credenciales correctas
-        else:
-            return False # No se encontró un médico con esas credenciales
     except Exception as e:
-        # En caso de cualquier error (ej. problemas con la base de datos), imprime el error y retorna False
         print(f"Ocurrió un error al verificar el médico: {e}")
         return False
+
 
 
 print(os.getenv("SUPABASE_DB_HOST"))
@@ -202,3 +204,71 @@ def check_paciente_login(id_paciente, nombre_apellido):
     params = (id_paciente.strip(), nombre_apellido.strip().lower())
     result = execute_query(query, params=params, is_select=True)
     return not result.empty
+# En tu archivo functions.py, al final o donde desees añadir nuevas funciones
+
+
+
+###################################################################################
+
+def get_paciente_info(id_paciente):
+    """
+    Busca la información de un paciente por su DNI (id_paciente) en la tabla "Pacientes" de Supabase.
+
+    Args:
+        id_paciente (str): El DNI del paciente a buscar.
+
+    Returns:
+        dict or None: Un diccionario con la información del paciente si se encuentra.
+                      Las claves del diccionario serán los nombres de las columnas.
+                      Retorna None si el paciente no existe o si ocurre un error.
+    """
+    # Consulta SQL para seleccionar todas las columnas del paciente por su DNI
+    # ¡Importante! Asegúrate de que "paciente" es el nombre exacto de tu tabla en Supabase.
+    # Y que las columnas que se seleccionan ('nombre_apellido', 'id_paciente', etc.)
+    # coincidan con los nombres reales de tus columnas en la tabla 'paciente'.
+    query = """
+        SELECT nombre_apellido, id_paciente, tipo_diabetes, sexo, dispositivo, altura, fecha_nacimiento, act_fisica
+        FROM "Pacientes"
+        WHERE id_paciente = %s
+    """
+    params = (id_paciente,)
+    
+    # Ejecuta la consulta usando tu función existente execute_query
+    # is_select=True es el valor por defecto, pero lo dejamos explícito por claridad.
+    result_df = execute_query(query, params=params, is_select=True)
+    
+    if not result_df.empty:
+        # Si se encontró al menos una fila, toma la primera y conviértela a un diccionario.
+        return result_df.iloc[0].to_dict()
+    else:
+        # Si el DataFrame está vacío, significa que el paciente no fue encontrado.
+        return None
+    
+################################################################################
+
+def obtener_paciente_por_dni(id_paciente):
+    try:
+        conn = psycopg2.connect(
+            host="aws-0-us-east-1.pooler.supabase.com",
+            port=5432,
+            database="postgres",
+            user="postgres.nuauokteicgejvyestli",
+            password="Kr7SGT_er?WQHkf"
+        )
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT * FROM "Pacientes"
+            WHERE id_paciente = %s
+        """, (id_paciente,))
+        
+        paciente = cursor.fetchone()
+
+        cursor.close()
+        conn.close()
+
+        return paciente
+
+    except Exception as e:
+        print(f"Error al buscar paciente: {e}")
+        return None

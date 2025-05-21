@@ -15,6 +15,7 @@
 
 import streamlit as st
 
+
 # --- Page Configuration (Optional but Recommended) ---
 st.set_page_config(
     page_title="Médico - Insulink",
@@ -107,26 +108,25 @@ from functions import verify_medico  # Asegúrate de que 'functions.py' esté en
 
 st.title("¿Ya tienes una cuenta? Inicia sesión aquí 👇")
 
-with st.form("inicio_sesion_medico"):
-    nombre_apellido = st.text_input("Nombre y Apellido")
-    id_medico = st.text_input("DNI del médico")
-    
-    submitted = st.form_submit_button("Iniciar Sesión")
 
-if submitted:
-    try:
-        # Aquí llamamos a una función que verifica las credenciales en la base de datos
-        # Esta función (verify_medico) debería estar en 'functions.py'
-        # y devolver True si las credenciales coinciden, False en caso contrario.
-        success = verify_medico(
-            nombre_apellido=nombre_apellido,
-            id_medico=id_medico,
-        )
-        
-        if success:
-            st.success("¡Inicio de sesión exitoso! Bienvenido/a.")
-            # Aquí podrías redirigir al médico a otra página o mostrar contenido específico
-        else:
-            st.error("Error de inicio de sesión: Nombre y/o DNI incorrectos.")
-    except Exception as e:
-        st.error(f"Ocurrió un error al intentar iniciar sesión: {e}")
+if not st.session_state.get("logged_in", False):
+    with st.form("inicio_sesion_medico"):
+        login_nombre = st.text_input("Nombre y Apellido")
+        login_id = st.text_input("DNI del médico")
+        submitted_login = st.form_submit_button("Iniciar Sesión")
+
+    if submitted_login:
+            if verify_medico(login_nombre.strip(), login_id.strip()):
+                st.session_state["logged_in"] = True
+                st.session_state["username"] = login_nombre.strip().title()
+                st.success(f"Bienvenido/a, {st.session_state['username']}!")
+            else:
+                st.error("Me parece que no estas registrado, o el DNI o nombre incorrecto. Por favor verifica tus datos.")
+else:
+    username = st.session_state.get("username", "Usuario")
+    st.success(f"Bienvenido/a de nuevo, {username}!")
+    
+    if st.button("Cerrar sesión"):
+        st.session_state.clear()
+
+
