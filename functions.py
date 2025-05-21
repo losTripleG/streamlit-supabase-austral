@@ -104,14 +104,39 @@ def execute_query(query, params=None, conn=None, is_select=True):
 
 
 def add_paciente(nombre_apellido, id_paciente, tipo_diabetes, sexo, dispositivo, altura, fecha_nacimiento, act_fisica):
-    """
-    Adds a new employee to the Empleado table.
-    """
+    # Normalización de entradas
+    nombre_apellido = nombre_apellido.strip().title()  # Capitaliza nombre
+    id_paciente = id_paciente.strip()  # Elimina espacios accidentales
 
-    query = """INSERT INTO "Pacientes" (nombre_apellido, id_paciente, tipo_diabetes, sexo, dispositivo, altura, fecha_nacimiento, act_fisica) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
-    params = (nombre_apellido, id_paciente, tipo_diabetes, sexo, dispositivo, altura, fecha_nacimiento, act_fisica)
-    
-    return execute_query(query, params=params, is_select=False)
+    query = """
+        INSERT INTO paciente (
+            nombre_apellido,
+            id_paciente,
+            tipo_diabetes,
+            sexo,
+            dispositivo,
+            altura,
+            fecha_nacimiento,
+            act_fisica
+        )
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+    """
+    params = (
+        nombre_apellido,
+        id_paciente,
+        int(tipo_diabetes),
+        sexo,
+        dispositivo,
+        float(altura),
+        fecha_nacimiento,
+        bool(act_fisica)
+    )
+    try:
+        execute_query(query, params=params, is_select=False)
+        return True
+    except Exception as e:
+        print(f"Error en add_paciente: {e}")
+        return False
 
 def add_medico(id_medico, nombre_apellido, hospital):
     """
@@ -122,45 +147,6 @@ def add_medico(id_medico, nombre_apellido, hospital):
     params = (id_medico, nombre_apellido, hospital)
     
     return execute_query(query, params=params, is_select=False)
-
-def verify_medico(nombre_apellido, id_medico):
-    """
-    Verifica si un médico existe en la base de datos con las credenciales proporcionadas.
-
-    Args:
-        nombre_apellido (str): Nombre y apellido del médico.
-        id_medico (str): DNI del médico.
-        hospital (str): Hospital al que pertenece el médico.
-
-    Returns:
-        bool: True si las credenciales coinciden con un médico existente, False en caso contrario.
-    """
-    try:
-        # Conecta a tu base de datos. ¡Asegúrate que 'database.db' sea el nombre correcto!
-        conn = sqlite3.connect('database.db')
-        cursor = conn.cursor()
-
-        # Ejecuta una consulta para buscar un médico que coincida con TODOS los parámetros
-        cursor.execute(
-            """SELECT * FROM "Médicos" WHERE nombre_apellido = ? AND id_medico = ?""",
-            (nombre_apellido, id_medico)
-        )
-
-        # Obtiene el primer resultado que coincida. Si no hay, fetchone() devuelve None.
-        medico_encontrado = cursor.fetchone()
-
-        conn.close() # Siempre cierra la conexión a la base de datos
-
-        if medico_encontrado:
-            return True  # El médico fue encontrado con las credenciales correctas
-        else:
-            return False # No se encontró un médico con esas credenciales
-    except Exception as e:
-        # En caso de cualquier error (ej. problemas con la base de datos), imprime el error y retorna False
-        print(f"Ocurrió un error al verificar el médico: {e}")
-        return False
-
-
 print(os.getenv("SUPABASE_DB_HOST"))
 print(os.getenv("SUPABASE_DB_PORT"))
 print(os.getenv("SUPABASE_DB_NAME"))

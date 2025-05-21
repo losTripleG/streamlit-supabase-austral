@@ -10,7 +10,7 @@ st.title("Registro de Paciente")
 
 with st.form("registro_paciente"):
     nombre_apellido = st.text_input("Nombre y Apellido")
-    id_paciente = st.text_input("ID del Paciente")
+    id_paciente = st.text_input("DNI del Paciente")
     
     tipo_diabetes = st.selectbox("Tipo de Diabetes", options=[1, 2])  # integer
     
@@ -20,7 +20,7 @@ with st.form("registro_paciente"):
     
     altura = st.number_input("Altura (en metros)", min_value=0.5, max_value=2.5, step=0.01, format="%.2f")  # float
     
-    fecha_nacimiento = st.date_input("Fecha de Nacimiento")
+    fecha_nacimiento = st.date_input("Fecha de Nacimiento", min_value="1900-01-01")
     
     act_fisica = st.checkbox("¿Realiza actividad física regularmente?")  # boolean
     
@@ -29,7 +29,7 @@ with st.form("registro_paciente"):
 if submitted:
     try:
         success = add_paciente(
-            nombre_apellido=nombre_apellido,
+            nombre_apellido=nombre_apellido.strip().lower(),
             id_paciente=id_paciente,
             tipo_diabetes=tipo_diabetes,
             sexo=sexo,
@@ -50,5 +50,28 @@ if submitted:
         st.success("Paciente registrado exitosamente.")
     else:
         st.error("Error al registrar al paciente.")
+from functions import check_paciente_login
 
+
+st.title("¿Ya tienes una cuenta? Inicia sesión:")
+
+if not st.session_state.get("logged_in", False):
+    with st.form("login_form"):
+        login_id = st.text_input("ID del Paciente")
+        login_nombre = st.text_input("Nombre y Apellido")
+        submitted_login = st.form_submit_button("Iniciar Sesión")
+
+        if submitted_login:
+            if check_paciente_login(login_id.strip(), login_nombre.strip()):
+                st.session_state["logged_in"] = True
+                st.session_state["username"] = login_nombre.strip().title()
+                st.success(f"Bienvenido/a, {st.session_state['username']}!")
+            else:
+                st.error("Me parece que no estas registrado, o el DNI o nombre incorrecto. Por favor verifica tus datos.")
+else:
+    username = st.session_state.get("username", "Usuario")
+    st.success(f"Bienvenido/a de nuevo, {username}!")
+    
+    if st.button("Cerrar sesión"):
+        st.session_state.clear()
 
