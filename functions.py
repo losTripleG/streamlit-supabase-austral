@@ -102,26 +102,55 @@ def execute_query(query, params=None, conn=None, is_select=True):
 
 
 def add_paciente(nombre_apellido, id_paciente, tipo_diabetes, sexo, dispositivo, altura, fecha_nacimiento, act_fisica):
-    """
-    Adds a new employee to the Empleado table.
-    """
+    # Normalización de entradas
+    nombre_apellido = nombre_apellido.strip().title()  # Capitaliza nombre
+    id_paciente = id_paciente.strip()  # Elimina espacios accidentales
 
-    query = """INSERT INTO "Pacientes" (nombre_apellido, id_paciente, tipo_diabetes, sexo, dispositivo, altura, fecha_nacimiento, act_fisica) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
-    params = (nombre_apellido, id_paciente, tipo_diabetes, sexo, dispositivo, altura, fecha_nacimiento, act_fisica)
-    
-    return execute_query(query, params=params, is_select=False)
+    query = """
+        INSERT INTO paciente (
+            nombre_apellido,
+            id_paciente,
+            tipo_diabetes,
+            sexo,
+            dispositivo,
+            altura,
+            fecha_nacimiento,
+            act_fisica
+        )
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+    """
+    params = (
+        nombre_apellido,
+        id_paciente,
+        int(tipo_diabetes),
+        sexo,
+        dispositivo,
+        float(altura),
+        fecha_nacimiento,
+        bool(act_fisica)
+    )
+    try:
+        execute_query(query, params=params, is_select=False)
+        return True
+    except Exception as e:
+        print(f"Error en add_paciente: {e}")
+        return False
 
 def add_medico(id_medico, nombre_apellido, hospital):
     """
     Adds a new employee to the Empleado table.
     """
 
-    query = "INSERT INTO Médico (id_medico, nombre_apellido, hospital) VALUES (%s, %s, %s)"
+    query = """INSERT INTO "Médico" (id_medico, nombre_apellido, hospital) VALUES (%s, %s, %s)"""
     params = (id_medico, nombre_apellido, hospital)
     
     return execute_query(query, params=params, is_select=False)
-print(os.getenv("SUPABASE_DB_HOST"))
-print(os.getenv("SUPABASE_DB_PORT"))
-print(os.getenv("SUPABASE_DB_NAME"))
-print(os.getenv("SUPABASE_DB_USER"))
-print(os.getenv("SUPABASE_DB_PASSWORD"))
+
+def check_paciente_login(id_paciente, nombre_apellido):
+    query = """
+        SELECT * FROM "Pacientes"
+        WHERE id_paciente = %s AND LOWER(TRIM(nombre_apellido)) = %s
+    """
+    params = (id_paciente.strip(), nombre_apellido.strip().lower())
+    result = execute_query(query, params=params, is_select=True)
+    return not result.empty
