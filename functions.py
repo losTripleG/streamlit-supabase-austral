@@ -2,6 +2,8 @@ import psycopg2
 import os
 from dotenv import load_dotenv
 import pandas as pd
+import sqlite3
+
 
 # Load environment variables from .env file
 load_dotenv()
@@ -116,10 +118,49 @@ def add_medico(id_medico, nombre_apellido, hospital):
     Adds a new employee to the Empleado table.
     """
 
-    query = "INSERT INTO Médico (id_medico, nombre_apellido, hospital) VALUES (%s, %s, %s)"
+    query = """INSERT INTO "Médico" (id_medico, nombre_apellido, hospital) VALUES (%s, %s, %s)"""
     params = (id_medico, nombre_apellido, hospital)
     
     return execute_query(query, params=params, is_select=False)
+
+def verify_medico(nombre_apellido, id_medico):
+    """
+    Verifica si un médico existe en la base de datos con las credenciales proporcionadas.
+
+    Args:
+        nombre_apellido (str): Nombre y apellido del médico.
+        id_medico (str): DNI del médico.
+        hospital (str): Hospital al que pertenece el médico.
+
+    Returns:
+        bool: True si las credenciales coinciden con un médico existente, False en caso contrario.
+    """
+    try:
+        # Conecta a tu base de datos. ¡Asegúrate que 'database.db' sea el nombre correcto!
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+
+        # Ejecuta una consulta para buscar un médico que coincida con TODOS los parámetros
+        cursor.execute(
+            """SELECT * FROM "Médicos" WHERE nombre_apellido = ? AND id_medico = ?""",
+            (nombre_apellido, id_medico)
+        )
+
+        # Obtiene el primer resultado que coincida. Si no hay, fetchone() devuelve None.
+        medico_encontrado = cursor.fetchone()
+
+        conn.close() # Siempre cierra la conexión a la base de datos
+
+        if medico_encontrado:
+            return True  # El médico fue encontrado con las credenciales correctas
+        else:
+            return False # No se encontró un médico con esas credenciales
+    except Exception as e:
+        # En caso de cualquier error (ej. problemas con la base de datos), imprime el error y retorna False
+        print(f"Ocurrió un error al verificar el médico: {e}")
+        return False
+
+
 print(os.getenv("SUPABASE_DB_HOST"))
 print(os.getenv("SUPABASE_DB_PORT"))
 print(os.getenv("SUPABASE_DB_NAME"))
