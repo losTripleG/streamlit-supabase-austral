@@ -109,7 +109,7 @@ def add_paciente(nombre_apellido, id_paciente, tipo_diabetes, sexo, dispositivo,
     id_paciente = id_paciente.strip()  # Elimina espacios accidentales
 
     query = """
-        INSERT INTO paciente (
+        INSERT INTO "Pacientes" (
             nombre_apellido,
             id_paciente,
             tipo_diabetes,
@@ -138,53 +138,51 @@ def add_paciente(nombre_apellido, id_paciente, tipo_diabetes, sexo, dispositivo,
         print(f"Error en add_paciente: {e}")
         return False
 
+
+
+# Conectar a Supabase
+def normalize_name(name: str) -> str:
+    """Convierte el nombre a minúsculas y elimina espacios extra."""
+    return " ".join(name.strip().lower().split())
+
 def add_medico(id_medico, nombre_apellido, hospital):
     """
-    Adds a new employee to the Empleado table.
+    Agrega un nuevo médico a la tabla Médicos.
     """
-    # Normalización de entradas
-    nombre_apellido = nombre_apellido.strip().title()  # Capitaliza nombre
-    id_medico = id_medico.strip()  # Elimina espacios accidentales
-
-    query = """INSERT INTO "Médico" (id_medico, nombre_apellido, hospital) VALUES (%s, %s, %s)"""
-    params = (id_medico, nombre_apellido, hospital)
-    
-    try:
-        execute_query(query, params=params, is_select=False)
-        return True
-    except Exception as e:
-        print(f"Error en add_medico: {e}")
-        return False
-
-import psycopg2
-
-def verify_medico(nombre_apellido, id_medico):
-    try:
-        # Conexión a Supabase PostgreSQL
-        conn = psycopg2.connect(
-            host="aws-0-us-east-1.pooler.supabase.com",
-            port=5432,
-            database="postgres",
-            user="postgres.nuauokteicgejvyestli",
-            password="Kr7SGT_er?WQHkf"
+    nombre_apellido= nombre_apellido.strip().title()
+    id_medico=id_medico.strip()
+    query = """
+        INSERT INTO "Médico" (
+            id_medico,
+            nombre_apellido,
+            hospital
         )
-        cursor = conn.cursor()
-
-        # Consulta SQL con comillas por el nombre de tabla con tilde y mayúscula
-        cursor.execute("""
-            SELECT * FROM "Médico" 
-            WHERE nombre_apellido = %s AND id_medico = %s
-        """, (nombre_apellido, id_medico))
-
-        resultado = cursor.fetchone()
-        cursor.close()
-        conn.close()
-
-        return resultado is not None
-
+        VALUES (%s, %s, %s)
+    """
+    
+    params = (
+            id_medico,
+            nombre_apellido,
+            hospital
+        )
+    try:
+            execute_query(query, params=params, is_select=False)
+            return True
     except Exception as e:
-        print(f"Ocurrió un error al verificar el médico: {e}")
-        return False
+            print(f"Error en add_medico: {e}")
+            return False
+
+
+def verify_medico(nombre_apellido,id_medico):
+    query = """
+        SELECT * FROM "Médico"
+        WHERE id_medico = %s AND LOWER(TRIM(nombre_apellido)) = %s
+    """
+    params = (id_medico.strip(), nombre_apellido.strip().lower())
+    result = execute_query(query, params=params, is_select=True)
+    return not result.empty
+
+
 
 
 
@@ -204,71 +202,35 @@ def check_paciente_login(id_paciente, nombre_apellido):
     params = (id_paciente.strip(), nombre_apellido.strip().lower())
     result = execute_query(query, params=params, is_select=True)
     return not result.empty
-# En tu archivo functions.py, al final o donde desees añadir nuevas funciones
-
-
-
-###################################################################################
-
-def get_paciente_info(id_paciente):
+def get_glucose_measurements(patient_id: str) -> pd.DataFrame:
     """
-    Busca la información de un paciente por su DNI (id_paciente) en la tabla "Pacientes" de Supabase.
+    Recupera todas las mediciones de glucosa para un paciente específico desde la tabla "Glucosa" en Supabase.
 
     Args:
-        id_paciente (str): El DNI del paciente a buscar.
+        patient_id (str): El ID único del paciente (ej. DNI).
 
     Returns:
-        dict or None: Un diccionario con la información del paciente si se encuentra.
-                      Las claves del diccionario serán los nombres de las columnas.
-                      Retorna None si el paciente no existe o si ocurre un error.
+        pd.DataFrame: Un DataFrame de pandas que contiene las mediciones de glucosa del paciente.
+                      Devuelve un DataFrame vacío si no se encuentran mediciones o si ocurre un error.
     """
-    # Consulta SQL para seleccionar todas las columnas del paciente por su DNI
-    # ¡Importante! Asegúrate de que "paciente" es el nombre exacto de tu tabla en Supabase.
-    # Y que las columnas que se seleccionan ('nombre_apellido', 'id_paciente', etc.)
-    # coincidan con los nombres reales de tus columnas en la tabla 'paciente'.
     query = """
-        SELECT nombre_apellido, id_paciente, tipo_diabetes, sexo, dispositivo, altura, fecha_nacimiento, act_fisica
-        FROM "Pacientes"
+        SELECT comida, resultado_glucosa, fecha, hora
+        FROM "Medicion de glucosa"
         WHERE id_paciente = %s
+        ORDER BY fecha DESC, hora DESC; -- Ordenar por fecha y hora para ver las más recientes primero
     """
-    params = (id_paciente,)
+    params = (patient_id.strip(),) # Asegúrate de que patient_id sea una tupla para params
     
-    # Ejecuta la consulta usando tu función existente execute_query
-    # is_select=True es el valor por defecto, pero lo dejamos explícito por claridad.
-    result_df = execute_query(query, params=params, is_select=True)
+    print(f"Buscando mediciones de glucosa para el paciente con ID: {patient_id}")
     
-    if not result_df.empty:
-        # Si se encontró al menos una fila, toma la primera y conviértela a un diccionario.
-        return result_df.iloc[0].to_dict()
+    # Llama a la función execute_query para obtener los datos
+    glucose_data = execute_query(query, params=params, is_select=True)
+    
+    if glucose_data.empty:
+        print(f"No se encontraron mediciones de glucosa para el paciente con ID: {patient_id}")
     else:
-        # Si el DataFrame está vacío, significa que el paciente no fue encontrado.
-        return None
+        print(f"Mediciones de glucosa encontradas para el paciente {patient_id}:\n{glucose_data.head()}") # Muestra solo las primeras filas para no saturar la consola
     
-################################################################################
+    return glucose_data
 
-def obtener_paciente_por_dni(id_paciente):
-    try:
-        conn = psycopg2.connect(
-            host="aws-0-us-east-1.pooler.supabase.com",
-            port=5432,
-            database="postgres",
-            user="postgres.nuauokteicgejvyestli",
-            password="Kr7SGT_er?WQHkf"
-        )
-        cursor = conn.cursor()
-        
-        cursor.execute("""
-            SELECT * FROM "Pacientes"
-            WHERE id_paciente = %s
-        """, (id_paciente,))
-        
-        paciente = cursor.fetchone()
 
-        cursor.close()
-        conn.close()
-
-        return paciente
-
-    except Exception as e:
-        print(f"Error al buscar paciente: {e}")
-        return None
