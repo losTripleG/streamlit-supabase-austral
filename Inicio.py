@@ -163,7 +163,7 @@ st.title("Insulink")
 col_vacia_izq_img, col_central_img, col_vacia_der_img = st.columns([1.5, 2, 1])
 with col_central_img:
     st.image(
-        "https://drive.google.com/file/d/1Z4Zel77PUJjn6q_PpG9DEFKANKtyiZd6/view?usp=drive_link", # Reemplaza esta URL con la URL de tu imagen
+        ".venv\Lib\site-packages\media\Imagen de WhatsApp 2025-06-04 a las 15.47.42_a14bd79b.jpg", # Reemplaza esta URL con la URL de tu imagen
         caption="Con vos, siempre", # Texto opcional que aparece debajo de la imagen
         width=200, # Ancho de la imagen en píxeles. Ajusta este valor si es muy grande o pequeño.
                    # Si quieres que la imagen ocupe todo el ancho de esta columna central,
