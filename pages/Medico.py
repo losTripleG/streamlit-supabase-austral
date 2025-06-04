@@ -117,4 +117,4 @@ else:
 
 # ---- ENLACE A PÁGINA EXCLUSIVA ----
 if st.session_state.get("medico_logged_in", False):
-    st.sidebar.page_link("pages/Registro_de_pacientes.py", label="Registro de Pacientes")
+    st.switch_page("pages/Registro_de_pacientes.py")
