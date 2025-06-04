@@ -52,7 +52,7 @@ query_select = """
 """
 mediciones_df = execute_query(query_select, (id_paciente,))
 if not mediciones_df.empty:
-    st.dataframe(mediciones_df)
+    st.dataframe(mediciones_df, hide_index=True)
 else:
     st.info("Todavía no hay mediciones registradas.")
 
