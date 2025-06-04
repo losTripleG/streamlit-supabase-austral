@@ -36,7 +36,7 @@ if submitted:
             act_fisica=act_fisica
         )
         if success:
-            st.success("Paciente registrado exitosamente.")
+            st.success("Paciente registrado exitosamente. Por favor, inicia sesión.")
         else:
             st.error("Error al registrar al paciente.")
     except Exception as e:
