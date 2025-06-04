@@ -70,5 +70,5 @@ else:
 # ---- ENLACE A REGISTROS ----
 
 if st.session_state.get("logged_in", False):
-    st.sidebar.page_link("pages/Registros.py", label="Registros de Glucosa")
+    st.switch_page("pages/Registros.py")
 
