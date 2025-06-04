@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 import pandas as pd
 import sqlite3
+import datetime
 
 
 # Load environment variables from .env file
@@ -233,4 +234,34 @@ def get_glucose_measurements(patient_id: str) -> pd.DataFrame:
     
     return glucose_data
 
+def get_glucose_measurements(patient_id: str) -> pd.DataFrame:
+    """
+    Recupera todas las mediciones de glucosa para un paciente específico desde la tabla "Medicion de glucosa".
 
+    Args:
+        patient_id (str): El ID único del paciente (ej. DNI).
+
+    Returns:
+        pd.DataFrame: Un DataFrame de pandas que contiene las mediciones de glucosa del paciente.
+                      Devuelve un DataFrame vacío si no se encuentran mediciones o si ocurre un error.
+    """
+    query = """
+        SELECT comida, resultado_glucosa, fecha, hora
+        FROM "Medicion de glucosa"
+        WHERE id_paciente = %s
+        ORDER BY fecha ASC, hora ASC; -- Ordenar por fecha y hora ascendente para el gráfico
+    """
+    params = (patient_id.strip(),) # Asegúrate de que patient_id sea una tupla para params
+
+    # Estos prints son útiles para depuración, puedes eliminarlos en producción
+    print(f"Buscando mediciones de glucosa para el paciente con ID: {patient_id}")
+
+    # Llama a la función execute_query para obtener los datos
+    glucose_data = execute_query(query, params=params, is_select=True)
+
+    if glucose_data.empty:
+        print(f"No se encontraron mediciones de glucosa para el paciente con ID: {patient_id}")
+    else:
+        print(f"Mediciones de glucosa encontradas para el paciente {patient_id}:\n{glucose_data.head()}")
+
+    return glucose_data
