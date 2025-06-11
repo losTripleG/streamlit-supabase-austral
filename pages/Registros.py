@@ -287,7 +287,19 @@ query_select = """
     ORDER BY fecha DESC
 """
 mediciones_df = execute_query(query_select, (id_paciente,))
+ # Renombrar para visualización
+
 if not mediciones_df.empty:
+
+    mediciones_df.columns = ["comida", "resultado_glucosa", "fecha", "hora"]
+    
+
+    mediciones_df= mediciones_df.rename(columns={
+        "comida":"Comida",
+        "resultado_glucosa":"Resultado Glucosa",
+        "fecha":"Fecha",
+        "hora":"Hora"
+    })
     st.dataframe(mediciones_df, hide_index=True)
 else:
     st.info("Todavía no hay mediciones registradas.")
@@ -396,7 +408,7 @@ if not insulina_df.empty:
         "medicion_post_registrada": "Glucosa posterior (mg/dL)"
     })
 
-    st.dataframe(insulina_df)
+    st.dataframe(insulina_df, hide_index=True)
 
 else:
     st.info("Aún no se han registrado aplicaciones de insulina.")
