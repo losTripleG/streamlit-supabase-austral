@@ -174,7 +174,7 @@ st.title("Insulink")
 col_vacia_izq_img, col_central_img, col_vacia_der_img = st.columns([0.7, 2, 1])
 with col_central_img:
     st.image(
-        ".venv\imagenes\ChatGPT Image 7 jun 2025, 03_16_56 p.m..png", # Reemplaza esta URL con la URL de tu imagen
+        "ChatGPT Image 7 jun 2025, 03_16_56 p.m..png", # Reemplaza esta URL con la URL de tu imagen
         caption="Con vos, siempre", # Texto opcional que aparece debajo de la imagen
         width=400, # Ancho de la imagen en píxeles. Ajusta este valor si es muy grande o pequeño.
                    # Si quieres que la imagen ocupe todo el ancho de esta columna central,
