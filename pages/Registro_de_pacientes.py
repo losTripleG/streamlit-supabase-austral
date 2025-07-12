@@ -1,38 +1,28 @@
 import streamlit as st
-
-
-# Verificación de sesión activa
-
-# Contenido disponible solo para médicos logueados
-st.title("Registro de pacientes 📝")
-st.write(f"Bienvenido/a, Dr/a. {st.session_state.get('username', '')}")
-
-# Aquí va la lógica de visualización y edición de registros de pacientes
-st.info("Aquí se mostrarán los registros de los pacientes.")
-
-# ... acá ponés el formulario para registrar paciente ...
-
-###################################################################
-import streamlit as st
 import pandas as pd
 import sys
 import os
+import datetime # ¡Asegúrate de importar datetime!
 
+st.set_page_config(
+    page_title="Insulink | Registros de pacientes",
+    page_icon="📑",
+    layout="centered" # "wide" or "centered"
+)
 # Asegúrate de que el directorio padre esté en el PYTHONPATH para importar 'functions'
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Importa las funciones necesarias de tu archivo 'functions.py'
-# Asegúrate de que 'get_glucose_measurements' esté disponible en 'functions.py'
-from functions import connect_to_supabase, execute_query, get_glucose_measurements
+# Solo necesitamos 'get_glucose_measurements' para esta funcionalidad específica
+from functions import get_glucose_measurements
 
-
-# Verificar si el médico está logueado
+# --- Verificación de sesión activa del médico ---
 # Esta página solo debe ser accesible si un médico ha iniciado sesión
 if "medico_id" not in st.session_state or st.session_state["medico_id"] is None:
     st.error("Por favor, inicia sesión como médico en la página principal para acceder a esta sección.")
     st.stop() # Detiene la ejecución del script si el médico no está logueado
 
-# Título de la página para médicos
+# --- Título de la página para médicos ---
 st.title("👨🏻‍⚕️ Visualizar Mediciones de Glucosa de Pacientes")
 st.write(f"Bienvenido/a, Dr/a. {st.session_state.get('medico_nombre', 'Médico')}. Aquí puedes buscar las mediciones de glucosa de tus pacientes.")
 
@@ -265,12 +255,12 @@ st.markdown("""
         color: white;
         font-weight: bold;
     }
-
+    
 
 </style>
 """, unsafe_allow_html=True)
 # --- FIN DEL CÓDIGO CSS PERSONALIZADO ---
-# Sección para que el médico ingrese el ID del paciente
+# --- Sección para que el médico ingrese el ID del paciente ---
 st.subheader("Buscar Mediciones por ID de Paciente")
 
 with st.form("buscar_paciente_mediciones"):
@@ -279,28 +269,100 @@ with st.form("buscar_paciente_mediciones"):
     
     submitted_search = st.form_submit_button("Buscar Mediciones")
 
-# Lógica para mostrar las mediciones una vez que el médico ingresa un ID
+# --- Lógica para mostrar las mediciones y el gráfico una vez que el médico ingresa un ID ---
+# --- Lógica para mostrar las mediciones y el gráfico una vez que el médico ingresa un ID ---
 if submitted_search:
     if patient_id_to_search:
-        st.info(f"Buscando mediciones para el paciente con ID: **{patient_id_to_search}**...")
+        st.session_state['current_patient_id'] = patient_id_to_search.strip()
         
-        # Llama a la función para obtener las mediciones de glucosa
-        # Esta función debe estar definida en tu archivo 'functions.py'
-        glucose_data_df = get_glucose_measurements(patient_id_to_search.strip())
-        glucose_data_df=glucose_data_df.rename(columns={
-        "comida":"Comida",
-        "resultado_glucosa":"Resultado Glucosa",
-        "fecha":"Fecha",
-        "hora":"Hora"
-    })
-        if not glucose_data_df.empty:
-            st.subheader(f"Historial de Mediciones de Glucosa para Paciente ID: {patient_id_to_search}")
-            st.dataframe(glucose_data_df, hide_index=True)
+        glucose_data_all = get_glucose_measurements(st.session_state['current_patient_id'])
+        
+        if not glucose_data_all.empty:
+            # Renombrar columnas y convertir fechas
+            glucose_data_all = glucose_data_all.rename(columns={
+                "comida": "Comida",
+                "resultado_glucosa": "Resultado Glucosa",
+                "fecha": "Fecha",
+                "hora": "Hora"
+            })
+            glucose_data_all['Fecha'] = pd.to_datetime(glucose_data_all['Fecha'])
+
+            # Guardar en session_state para no perderlo al tocar widgets
+            st.session_state['glucose_data_all'] = glucose_data_all
         else:
-            st.warning(f"No se encontraron mediciones de glucosa para el paciente con ID: **{patient_id_to_search}**. Por favor, verifique el ID.")
+            st.warning(f"No se encontraron mediciones de glucosa para el paciente con ID: **{patient_id_to_search}**.")
     else:
         st.error("Por favor, ingrese un ID de paciente para buscar.")
 
-# Opcional: Si quieres mantener alguna otra funcionalidad para el médico en esta página, puedes añadirla aquí.
-# Por ejemplo, un botón para volver a la página principal o para registrar nuevos pacientes (si esa es otra funcionalidad).
+# --- Mostrar datos y filtros si ya hay un paciente cargado en session_state ---
+if 'glucose_data_all' in st.session_state:
+    glucose_data_all = st.session_state['glucose_data_all']
+    patient_id = st.session_state['current_patient_id']
 
+    st.subheader(f"Historial Completo de Mediciones para Paciente ID: {patient_id}")
+    st.dataframe(glucose_data_all, hide_index=True)
+
+    st.subheader("Gráfico de Glucosa")
+
+    # Contenedores para la selección de rango
+    col1, col2 = st.columns([1, 2])
+
+    time_range_option = col1.selectbox(
+        "Seleccione rango de tiempo",
+        ["Últimos 7 días", "Últimos 15 días", "Últimos 30 días", "Rango personalizado"]
+    )
+
+    import datetime
+    start_date_filter = None
+    end_date_filter = datetime.date.today()
+
+    if time_range_option == "Últimos 7 días":
+        start_date_filter = datetime.date.today() - datetime.timedelta(days=7)
+    elif time_range_option == "Últimos 15 días":
+        start_date_filter = datetime.date.today() - datetime.timedelta(days=15)
+    elif time_range_option == "Últimos 30 días":
+        start_date_filter = datetime.date.today() - datetime.timedelta(days=30)
+    elif time_range_option == "Rango personalizado":
+        start_date_filter = col2.date_input(
+            "Fecha de inicio", 
+            datetime.date.today() - datetime.timedelta(days=30)
+        )
+        end_date_filter = col2.date_input(
+            "Fecha de fin", 
+            datetime.date.today()
+        )
+
+    # Validación del rango
+    if start_date_filter and end_date_filter and start_date_filter > end_date_filter:
+        st.warning("La fecha de inicio no puede ser posterior a la fecha de fin.")
+    else:
+        # Filtrar y graficar
+        start_ts = pd.to_datetime(start_date_filter)
+        end_ts = pd.to_datetime(end_date_filter)
+
+        data_filtered = glucose_data_all[
+            (glucose_data_all['Fecha'] >= start_ts) &
+            (glucose_data_all['Fecha'] <= end_ts)
+        ]
+
+        if not data_filtered.empty:
+            if start_ts == end_ts:
+            # Si es un solo día, graficar por hora
+                data_filtered['Hora'] = data_filtered['Hora'].astype(str)
+
+                data_filtered['FechaHora'] = pd.to_datetime(data_filtered['Fecha'].dt.strftime('%Y-%m-%d') + ' ' + data_filtered['Hora'])
+                data_filtered = data_filtered.sort_values('FechaHora')
+
+                st.line_chart(data_filtered, x='FechaHora', y='Resultado Glucosa')
+                st.caption(f"Mostrando evolución de glucosa durante el día {start_date_filter.strftime('%d-%m-%Y')} (hora a hora).")
+            else:
+            # Si son varios días, graficar por fecha
+                st.line_chart(data_filtered, x='Fecha', y='Resultado Glucosa')
+                st.caption(f"Mostrando mediciones desde el {start_date_filter.strftime('%d-%m-%Y')} hasta el {end_date_filter.strftime('%d-%m-%Y')}.")
+        else:
+            st.info("No hay mediciones de glucosa registradas en el rango de tiempo seleccionado.")
+
+                
+else:
+        # Mensaje si el campo de ID del paciente está vacío
+        st.error("Por favor, ingrese un ID de paciente para buscar.")
