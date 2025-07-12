@@ -284,7 +284,7 @@ query_select = """
     SELECT comida, resultado_glucosa, fecha, hora
     FROM "Medicion de glucosa"
     WHERE id_paciente = %s
-    ORDER BY fecha DESC
+    ORDER BY fecha DESC, hora DESC
 """
 mediciones_df = execute_query(query_select, (id_paciente,))
  # Renombrar para visualización
