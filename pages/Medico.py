@@ -285,7 +285,7 @@ if submitted:
             hospital=hospital
         )
         if success:
-            st.success("Médico registrado exitosamente.")
+            st.success("Médico registrado exitosamente. Por favor iniciar sesión")
         else:
             st.error("Error al registrar al médico. ¿Ya estás registrado?")
     except Exception as e:
