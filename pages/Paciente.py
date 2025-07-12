@@ -306,8 +306,9 @@ st.title("¿Ya tienes una cuenta? Inicia sesión:")
 
 if not st.session_state.get("logged_in", False):
     with st.form("login_form"):
-        login_id = st.text_input("ID del Paciente (DNI)")
         login_nombre = st.text_input("Nombre y Apellido")
+        login_id = st.text_input("ID del Paciente (DNI)")
+        
         submitted_login = st.form_submit_button("Iniciar Sesión")
 
         if submitted_login:
