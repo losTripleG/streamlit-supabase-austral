@@ -490,3 +490,16 @@ else:
     )
 
     st.plotly_chart(fig, use_container_width=True)
+
+st.title("Mensajes de tu Médico")
+st.subheader("Tu médico esta al tanto de tu evolución, está al tanto de vos.")
+from functions import obtener_mensaje_paciente  # Asegurate de agregar esta función también
+
+# Obtener mensaje del médico para este paciente
+mensaje = obtener_mensaje_paciente(st.session_state["login_id"])
+
+if mensaje:
+    st.info(f"📩 **Mensaje del médico:** {mensaje}")
+else:
+    st.info("No hay mensajes nuevos del médico.")
+
