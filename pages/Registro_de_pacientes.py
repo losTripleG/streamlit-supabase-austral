@@ -366,3 +366,25 @@ if 'glucose_data_all' in st.session_state:
 else:
         # Mensaje si el campo de ID del paciente está vacío
         st.error("Por favor, ingrese un ID de paciente para buscar.")
+
+##MENSAJE DEL MEDICO
+from functions import guardar_mensaje_paciente  # Asegurate de importar la función
+
+st.subheader("📬 Enviar mensaje al paciente")
+
+with st.form("form_mensaje_paciente"):
+    mensaje = st.text_area("Mensaje para el paciente", placeholder="Escribe un mensaje breve...")
+    enviar_mensaje = st.form_submit_button("Enviar mensaje")
+
+    if enviar_mensaje:
+        if not patient_id_to_search.strip():
+            st.warning("Primero ingresá un ID de paciente válido.")
+        elif not mensaje.strip():
+            st.warning("El mensaje no puede estar vacío.")
+        else:
+            exito = guardar_mensaje_paciente(patient_id_to_search, mensaje)
+            if exito:
+                st.success("✅ Mensaje guardado correctamente.")
+            else:
+                st.error("❌ Ocurrió un error al guardar el mensaje.")
+
